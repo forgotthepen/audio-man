@@ -1,3 +1,6 @@
 [submodule "libs/miniaudio"]
 	path = libs/miniaudio
 	url = https://github.com/mackron/miniaudio.git
+[submodule "libs/miniz"]
+	path = libs/miniz
+	url = https://github.com/richgel999/miniz.git
