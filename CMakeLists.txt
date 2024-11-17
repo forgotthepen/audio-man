@@ -14,7 +14,7 @@ add_subdirectory(libs/miniz EXCLUDE_FROM_ALL)
 add_executable(
     audio_man
 
-    main.cpp
+    test_console.cpp
 
     audio_man/audio_man.cpp
     audio_man/audio_man.hpp
