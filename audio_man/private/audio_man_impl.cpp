@@ -287,11 +287,15 @@ void AudioManImpl::UninitPlayback()
     is_playback_inited = false;
 }
 
-AudioRequestImpl* AudioManImpl::SubmitAudio(const std::vector<char> &audio_data)
+AudioRequestImpl* AudioManImpl::SubmitAudio(const char *audio_data, size_t count)
 {
+    if (!is_playback_inited) {
+        return {};
+    }
+
     auto req = playback_requests.CreateNew();
 
-    req->data.assign(audio_data.begin(), audio_data.end());
+    req->data.assign(audio_data, audio_data + count);
 
     req->decoder = ma_decoder{};
     if (ma_decoder_init_memory(req->data.data(), req->data.size(), nullptr, &req->decoder.value()) != MA_SUCCESS) {

@@ -143,7 +143,7 @@ public:
 
     bool InitPlayback();
     void UninitPlayback();
-    AudioRequestImpl* SubmitAudio(const std::vector<char> &audio_data);
+    AudioRequestImpl* SubmitAudio(const char *audio_data, size_t count);
     void CancelAllPlayback();
 
     bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format);

@@ -73,6 +73,7 @@ public:
     bool InitPlayback() const;
     void UninitPlayback() const;
     AudioRequest SubmitAudio(const std::vector<char> &audio_data) const;
+    AudioRequest SubmitAudio(const char *audio_data, size_t count) const;
     void CancelAllPlayback() const;
     
     bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format) const;

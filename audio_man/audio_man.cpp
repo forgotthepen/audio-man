@@ -92,7 +92,12 @@ void AudioMan::UninitPlayback() const
 
 AudioRequest AudioMan::SubmitAudio(const std::vector<char> &audio_data) const
 {
-    return impl->SubmitAudio(audio_data);
+    return impl->SubmitAudio(audio_data.data(), audio_data.size());
+}
+
+AudioRequest AudioMan::SubmitAudio(const char *audio_data, size_t count) const
+{
+    return impl->SubmitAudio(audio_data, count);
 }
 
 void AudioMan::CancelAllPlayback() const
