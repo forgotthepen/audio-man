@@ -88,7 +88,7 @@ public:
     AudioRequest SubmitAudio(const std::vector<char> &audio_data) const;
     void CancelAllPlayback() const;
     
-    bool StartRecording(unsigned int sample_rate, RecordingFormat_t format) const;
+    bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format) const;
     void StopRecording() const;
     void ClearRecording() const;
     RecordingDataChunks_t GetUnreadRecordingChunks(size_t bytes = static_cast<size_t>(-1)) const;

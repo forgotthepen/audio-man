@@ -102,9 +102,9 @@ void AudioMan::CancelAllPlayback() const
 
 
 
-bool AudioMan::StartRecording(unsigned int sample_rate, RecordingFormat_t format) const
+bool AudioMan::StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format) const
 {
-    return impl->StartRecording(sample_rate, format);
+    return impl->StartRecording(sample_rate, channels, format);
 }
 
 void AudioMan::StopRecording() const

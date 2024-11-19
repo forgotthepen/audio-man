@@ -138,7 +138,7 @@ public:
     AudioRequestImpl* SubmitAudio(const std::vector<char> &audio_data);
     void CancelAllPlayback();
 
-    bool StartRecording(unsigned int sample_rate, RecordingFormat_t format);
+    bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format);
     void StopRecording();
     void ClearRecording();
     RecordingDataChunks_t GetUnreadRecordingChunks(size_t bytes);

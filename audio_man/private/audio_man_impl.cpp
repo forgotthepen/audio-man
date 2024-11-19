@@ -309,7 +309,7 @@ void AudioManImpl::CancelAllPlayback()
 
 
 
-bool AudioManImpl::StartRecording(unsigned int sample_rate, RecordingFormat_t format)
+bool AudioManImpl::StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format)
 {
     if (is_recording_active) {
         return true;
@@ -327,12 +327,12 @@ bool AudioManImpl::StartRecording(unsigned int sample_rate, RecordingFormat_t fo
     default: recording_device.cfg.capture.format = ma_format_s16; break;
     }
 
-    recording_device.cfg.capture.channels = 1; // mono
+    recording_device.cfg.capture.channels = channels;
     recording_device.cfg.sampleRate = sample_rate;
     recording_device.cfg.pUserData = &recording_buffer_man;
     recording_device.cfg.dataCallback = [](ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount){
         if (!pInput) {
-            return; // No input data available.
+            return; // no input data
         }
 
         auto recording_buffer_man = static_cast<RecordingBufferMan *>(pDevice->pUserData);
