@@ -420,23 +420,22 @@ std::vector<char> AudioManImpl::GetUnreadRecording(size_t max_bytes)
     return recording_buffer_man.GetUnreadChunks(max_bytes);
 }
 
-std::vector<char> AudioManImpl::DecodeRecordingChunks(const std::vector<char> &chunks)
+std::vector<char> AudioManImpl::DecodeRecordingChunks(const char *chunks, size_t count)
 {
-    if (chunks.empty()) {
+    if (!chunks || !count) {
         return {};
     }
 
     std::vector<char> data{};
-    auto mic_chunks = chunks.data();
-    const auto mic_chunks_end = chunks.data() + chunks.size();
-    while (mic_chunks < mic_chunks_end) {
-        auto chunk = reinterpret_cast<const MicChunkHeader_t *>(mic_chunks);
+    const auto chunks_end = chunks + count;
+    while (chunks < chunks_end) {
+        auto chunk = reinterpret_cast<const MicChunkHeader_t *>(chunks);
         if (chunk->original_bytes > 0 && chunk->compressed_bytes > 0) {
-            auto compressed_chunk = mic_chunks + sizeof(MicChunkHeader_t);
+            auto compressed_chunk = chunks + sizeof(MicChunkHeader_t);
             auto deco = decompress_gzip(compressed_chunk, chunk->compressed_bytes, chunk->original_bytes);
             data.insert(data.end(), deco.begin(), deco.end());
         }
-        mic_chunks += sizeof(MicChunkHeader_t) + chunk->compressed_bytes;
+        chunks += sizeof(MicChunkHeader_t) + chunk->compressed_bytes;
     }
 
     return data;

@@ -82,4 +82,5 @@ public:
     size_t SizeUnreadRecording() const;
     std::vector<char> GetUnreadRecording(size_t max_bytes = static_cast<size_t>(-1)) const;
     std::vector<char> DecodeRecordingChunks(const std::vector<char> &chunks) const;
+    std::vector<char> DecodeRecordingChunks(const char *chunks, size_t count) const;
 };

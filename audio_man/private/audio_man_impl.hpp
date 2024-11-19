@@ -151,6 +151,6 @@ public:
     void ClearRecording();
     size_t SizeUnreadRecording();
     std::vector<char> GetUnreadRecording(size_t max_bytes);
-    std::vector<char> DecodeRecordingChunks(const std::vector<char> &chunks);
+    std::vector<char> DecodeRecordingChunks(const char *chunks, size_t count);
 
 };

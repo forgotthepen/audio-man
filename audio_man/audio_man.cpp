@@ -134,5 +134,10 @@ std::vector<char> AudioMan::GetUnreadRecording(size_t max_bytes) const
 
 std::vector<char> AudioMan::DecodeRecordingChunks(const std::vector<char> &chunks) const
 {
-    return impl->DecodeRecordingChunks(chunks);
+    return impl->DecodeRecordingChunks(chunks.data(), chunks.size());
+}
+
+std::vector<char> AudioMan::DecodeRecordingChunks(const char *chunks, size_t count) const
+{
+    return impl->DecodeRecordingChunks(chunks, count);
 }
