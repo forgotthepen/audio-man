@@ -98,16 +98,23 @@ public:
 };
 
 
+struct MicChunkHeader_t
+{
+    uint32_t original_bytes{};
+    uint32_t compressed_bytes{};
+    // compressed data array is appended here
+};
+
 class RecordingBufferMan
 {
 private:
-    std::vector<MicChunk_t> mic_buffer{};
+    std::vector<char> mic_buffer{};
     std::recursive_mutex mtx{};
     
 public:
     void PushData(const char *data, uint32_t bytes);
     void Clear();
-    std::vector<MicChunk_t> GetUnreadChunks(size_t chunks_count);
+    std::vector<char> GetUnreadChunks(size_t max_bytes);
     size_t SizeUnread();
 };
 
@@ -140,9 +147,10 @@ public:
 
     bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format);
     void StopRecording();
+    bool IsRecording() const;
     void ClearRecording();
-    RecordingDataChunks_t GetUnreadRecordingChunks(size_t bytes);
     size_t SizeUnreadRecording();
-    std::vector<char> DecodeRecordingChunks(const RecordingDataChunks_t& chunks);
+    std::vector<char> GetUnreadRecording(size_t max_bytes);
+    std::vector<char> DecodeRecordingChunks(const std::vector<char> &chunks);
 
 };

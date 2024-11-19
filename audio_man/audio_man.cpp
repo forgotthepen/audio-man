@@ -109,17 +109,17 @@ bool AudioMan::StartRecording(unsigned int sample_rate, unsigned char channels, 
 
 void AudioMan::StopRecording() const
 {
-    return impl->StopRecording();
+    impl->StopRecording();
+}
+
+bool AudioMan::IsRecording() const
+{
+    return impl->IsRecording();
 }
 
 void AudioMan::ClearRecording() const
 {
-    return impl->ClearRecording();
-}
-
-RecordingDataChunks_t AudioMan::GetUnreadRecordingChunks(size_t bytes) const
-{
-    return impl->GetUnreadRecordingChunks(bytes);
+    impl->ClearRecording();
 }
 
 size_t AudioMan::SizeUnreadRecording() const
@@ -127,7 +127,12 @@ size_t AudioMan::SizeUnreadRecording() const
     return impl->SizeUnreadRecording();
 }
 
-std::vector<char> AudioMan::DecodeRecordingChunks(const RecordingDataChunks_t& chunks) const
+std::vector<char> AudioMan::GetUnreadRecording(size_t max_bytes) const
+{
+    return impl->GetUnreadRecording(max_bytes);
+}
+
+std::vector<char> AudioMan::DecodeRecordingChunks(const std::vector<char> &chunks) const
 {
     return impl->DecodeRecordingChunks(chunks);
 }

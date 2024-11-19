@@ -52,25 +52,12 @@ public:
 };
 
 
-enum class RecordingFormat_t {
+enum class RecordingFormat_t : uint32_t {
     Float32,
-    Signed16,
-    Signed24,
-    Signed32,
-    Unsigned8,
-};
-
-struct MicChunk_t
-{
-    std::vector<char> compressed_chunk{};
-    uint32_t original_bytes{};
-};
-
-struct RecordingDataChunks_t
-{
-    std::vector<MicChunk_t> chunks{};
-    RecordingFormat_t format{};
-    unsigned int sample_rate{};
+    Signed16 = 16,
+    Signed24 = 24,
+    Signed32 = 32,
+    Unsigned8 = 8,
 };
 
 
@@ -90,8 +77,9 @@ public:
     
     bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format) const;
     void StopRecording() const;
+    bool IsRecording() const;
     void ClearRecording() const;
-    RecordingDataChunks_t GetUnreadRecordingChunks(size_t bytes = static_cast<size_t>(-1)) const;
     size_t SizeUnreadRecording() const;
-    std::vector<char> DecodeRecordingChunks(const RecordingDataChunks_t& chunks) const;
+    std::vector<char> GetUnreadRecording(size_t max_bytes = static_cast<size_t>(-1)) const;
+    std::vector<char> DecodeRecordingChunks(const std::vector<char> &chunks) const;
 };
