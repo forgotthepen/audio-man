@@ -320,7 +320,7 @@ AudioRequestImpl* AudioManImpl::SubmitAudio(const std::vector<char> &audio_data)
         return nullptr;
     }
     
-    // ma_sound_set_spatialization_enabled(&sound, false);
+    // ma_sound_set_spatialization_enabled(&req->sound.value(), MA_FALSE);
 
     // lock this in case playback finished earlier than this function finishes execution
     std::lock_guard req_lock(req->req_mtx);
