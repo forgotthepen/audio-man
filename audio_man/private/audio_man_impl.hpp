@@ -127,6 +127,7 @@ private:
         ma_device device{};
         RecordingFormat_t format{};
         unsigned int sample_rate{};
+        unsigned char channels{};
     };
 
     PlaybackRequestsMan playback_requests{};
@@ -148,6 +149,9 @@ public:
     bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format);
     void StopRecording();
     bool IsRecording() const;
+    unsigned int GetRecordingSampleRate() const;
+    unsigned char GetRecordingChannelsCount() const;
+    RecordingFormat_t GetRecordingRecordingFormat() const;
     void ClearRecording();
     size_t SizeUnreadRecording();
     std::vector<char> GetUnreadRecording(size_t max_bytes);

@@ -385,6 +385,7 @@ bool AudioManImpl::StartRecording(unsigned int sample_rate, unsigned char channe
 
     recording_device.format = format;
     recording_device.sample_rate = sample_rate;
+    recording_device.channels = channels;
     is_recording_active = true;
     return true;
 }
@@ -404,6 +405,22 @@ bool AudioManImpl::IsRecording() const
 {
     return is_recording_active;
 }
+
+unsigned int AudioManImpl::GetRecordingSampleRate() const
+{
+    return recording_device.sample_rate;
+}
+
+unsigned char AudioManImpl::GetRecordingChannelsCount() const
+{
+    return recording_device.channels;
+}
+
+RecordingFormat_t AudioManImpl::GetRecordingRecordingFormat() const
+{
+    return recording_device.format;
+}
+
 
 void AudioManImpl::ClearRecording()
 {

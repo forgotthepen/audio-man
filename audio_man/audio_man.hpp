@@ -78,6 +78,9 @@ public:
     bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format) const;
     void StopRecording() const;
     bool IsRecording() const;
+    unsigned int GetRecordingSampleRate() const;
+    unsigned char GetRecordingChannelsCount() const;
+    RecordingFormat_t GetRecordingRecordingFormat() const;
     void ClearRecording() const;
     size_t SizeUnreadRecording() const;
     std::vector<char> GetUnreadRecording(size_t max_bytes = static_cast<size_t>(-1)) const;

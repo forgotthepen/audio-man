@@ -117,6 +117,21 @@ bool AudioMan::IsRecording() const
     return impl->IsRecording();
 }
 
+unsigned int AudioMan::GetRecordingSampleRate() const
+{
+    return impl->GetRecordingSampleRate();
+}
+
+unsigned char AudioMan::GetRecordingChannelsCount() const
+{
+    return impl->GetRecordingChannelsCount();
+}
+
+RecordingFormat_t AudioMan::GetRecordingRecordingFormat() const
+{
+    return impl->GetRecordingRecordingFormat();
+}
+
 void AudioMan::ClearRecording() const
 {
     impl->ClearRecording();
