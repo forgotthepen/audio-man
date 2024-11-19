@@ -74,32 +74,44 @@ int main(int argc, char** argv)
 
 
   {
-    if (amn.StartRecording(44100, RecordingFormat_t::Signed16)) {
-      std::cout << "started mic!" << std::endl;
-      std::this_thread::sleep_for(std::chrono::seconds(5));
+    if (amn.StartRecording(48000, 2, RecordingFormat_t::Signed16)) {
+      std::cout << "started mic loopback!" << std::endl;
+
+      auto t1 = std::chrono::high_resolution_clock::now();
+      while (amn.IsRecording()) {
+        // std::this_thread::sleep_for(std::chrono::milliseconds(3));
+        
+        auto chunks = amn.GetUnreadRecording();
+        if (!chunks.empty()) {
+          auto deco = amn.DecodeRecordingChunks(chunks);
+          auto wav = pcm_to_wav(deco, 48000, 2, 16);
+          amn.SubmitAudio(wav);
+          // std::cout << "comp=" << chunks.size() << " org=" << deco.size() << " ratio=" << 100 * (float)chunks.size() / deco.size() << std::endl;
+        }
+        
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto dd = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+        if (dd > 15) {
+          break;
+        }
+      }
+      
       amn.StopRecording();
-      std::cout << "stopped mic!" << std::endl;
-
-      auto chunks = amn.GetUnreadRecordingChunks();
-      auto deco = amn.DecodeRecordingChunks(chunks);
-      auto dd = pcm_to_wav(deco, 44100, 1, 16);
-
-      auto resrec = amn.SubmitAudio(dd);
-      std::cout << "recording playback=" << resrec.Wait() << std::endl;
+      std::cout << "stopped mic loopback!" << std::endl;
     }
   }
 
   {
-    if (amn.StartRecording(44100, RecordingFormat_t::Signed16)) {
+    if (amn.StartRecording(44100, 1, RecordingFormat_t::Signed16)) {
       std::cout << "started mic!" << std::endl;
       std::this_thread::sleep_for(std::chrono::seconds(5));
       amn.StopRecording();
       std::cout << "stopped mic!" << std::endl;
 
-      auto chunks = amn.GetUnreadRecordingChunks();
+      auto chunks = amn.GetUnreadRecording();
       auto deco = amn.DecodeRecordingChunks(chunks);
       auto dd = pcm_to_wav(deco, 44100, 1, 16);
-      
+
       auto resrec = amn.SubmitAudio(dd);
       std::cout << "recording playback=" << resrec.Wait() << std::endl;
     }
@@ -140,4 +152,3 @@ int main(int argc, char** argv)
 
   return 0;
 }
-
