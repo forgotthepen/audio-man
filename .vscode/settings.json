@@ -99,6 +99,7 @@
         "queue": "cpp",
         "random": "cpp",
         "regex": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "bitset": "cpp"
     }
 }
