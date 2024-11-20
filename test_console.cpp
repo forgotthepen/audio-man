@@ -79,7 +79,7 @@ int main(int argc, char** argv)
 
       auto t1 = std::chrono::high_resolution_clock::now();
       while (amn.IsRecording()) {
-        // std::this_thread::sleep_for(std::chrono::milliseconds(3));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(15));
         
         auto chunks = amn.GetUnreadRecording();
         if (!chunks.empty()) {
@@ -91,7 +91,7 @@ int main(int argc, char** argv)
         
         auto t2 = std::chrono::high_resolution_clock::now();
         auto dd = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        if (dd > 15) {
+        if (dd > 25) {
           break;
         }
       }
