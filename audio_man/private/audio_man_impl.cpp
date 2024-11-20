@@ -28,6 +28,7 @@ For more information, please refer to <https://unlicense.org>
 #include <thread>
 #include <utility>
 #include <memory>
+#include <numeric>
 
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio/miniaudio.h"
@@ -145,7 +146,8 @@ PlaybackRequestsMan::~PlaybackRequestsMan()
 
 
 
-static std::vector<char> compress_gzip(const char *data, uint32_t bytes) {
+static std::vector<char> compress_gzip(const char *data, uint32_t bytes)
+{
     auto max_compressed_bytes = mz_compressBound(bytes);
     std::vector<char> compressed_data(max_compressed_bytes);
 
@@ -155,18 +157,23 @@ static std::vector<char> compress_gzip(const char *data, uint32_t bytes) {
         &compressed_bytes,
         reinterpret_cast<const unsigned char*>(data),
         bytes,
-        MZ_BEST_COMPRESSION
+        MZ_BEST_SPEED
     );
 
     if (status != MZ_OK) {
-        return {};
+        return std::vector<char>(data, data + bytes);
     }
 
     compressed_data.resize(compressed_bytes);
     return compressed_data;
 }
 
-static std::vector<char> decompress_gzip(const char *compressed_data, size_t compressed_data_size, size_t original_size) {
+static std::vector<char> decompress_gzip(const char *compressed_data, size_t compressed_data_size, size_t original_size)
+{
+    if (compressed_data_size == original_size) { // previous compression failed
+        return std::vector<char>(compressed_data, compressed_data + compressed_data_size);
+    }
+
     std::vector<char> decompressed_data(original_size);
 
     auto decompressed_size = static_cast<mz_ulong>(original_size);
@@ -177,7 +184,7 @@ static std::vector<char> decompress_gzip(const char *compressed_data, size_t com
         compressed_data_size);
 
     if (status != MZ_OK) {
-        return {};
+        return std::vector<char>(compressed_data, compressed_data + compressed_data_size);
     }
 
     decompressed_data.resize(decompressed_size);
@@ -186,69 +193,70 @@ static std::vector<char> decompress_gzip(const char *compressed_data, size_t com
 
 void RecordingBufferMan::PushData(const char *data, uint32_t bytes)
 {
-    std::lock_guard lock(mtx);
-    
-    auto chunk_header = MicChunkHeader_t{};
-    if (bytes) {
-        auto compressed = compress_gzip(data, bytes);
-        chunk_header.original_bytes = bytes;
-        chunk_header.compressed_bytes = static_cast<uint32_t>(compressed.size());
-
-        // add the header
-        auto header_buffer = reinterpret_cast<const char *>(&chunk_header);
-        mic_buffer.insert(mic_buffer.end(), header_buffer, header_buffer + sizeof(MicChunkHeader_t));
-        // then append the data
-        mic_buffer.insert(mic_buffer.end(), compressed.begin(), compressed.end());
-    } else {
-        chunk_header.original_bytes = 0;
-        chunk_header.compressed_bytes = 0;
-
-        // add the header only
-        auto header_buffer = reinterpret_cast<const char *>(&chunk_header);
-        mic_buffer.insert(mic_buffer.end(), header_buffer, header_buffer + sizeof(MicChunkHeader_t));
+    if (!bytes) {
+        return;
     }
-    
+
+    auto chunk = MicChunk_t{};
+    chunk.original_bytes = bytes;
+    chunk.compressed_data = compress_gzip(data, bytes);
+    mic_buffer.emplace_back(std::move(chunk));
 }
 
 void RecordingBufferMan::Clear()
 {
-    std::lock_guard lock(mtx);
-
     mic_buffer.clear();
 }
 
 std::vector<char> RecordingBufferMan::GetUnreadChunks(size_t max_bytes)
 {
-    std::lock_guard lock(mtx);
+    if (mic_buffer.empty() || !max_bytes) {
+        return {};
+    }
 
     size_t bytes_to_copy = 0;
-    auto chunks = mic_buffer.data();
-    const auto chunks_end = mic_buffer.data() + mic_buffer.size();
-    while (chunks < chunks_end) {
-        auto current_chunk = reinterpret_cast<const MicChunkHeader_t *>(chunks);
-        auto chunk_size = sizeof(MicChunkHeader_t) + current_chunk->compressed_bytes;
-        if ((bytes_to_copy + chunk_size) > max_bytes) {
+    const auto mic_buffer_begin = mic_buffer.begin();
+    const auto mic_buffer_end = mic_buffer.end();
+    auto last_chunk_it = mic_buffer_begin;
+    for (; last_chunk_it != mic_buffer_end; ++last_chunk_it) {
+        auto chunk_size = sizeof(MicChunkHeaderSerialized_t) + last_chunk_it->compressed_data.size();
+        bytes_to_copy += chunk_size;
+        if (bytes_to_copy > max_bytes) {
+            bytes_to_copy -= chunk_size;
             break;
         }
-        
-        bytes_to_copy += chunk_size;
-        chunks += chunk_size;
+
     }
 
     if (!bytes_to_copy) {
         return {};
     }
 
-    auto ret = std::vector<char>(mic_buffer.begin(), mic_buffer.begin() + bytes_to_copy);
-    mic_buffer.erase(mic_buffer.begin(), mic_buffer.begin() + bytes_to_copy);
+    std::vector<char> ret{};
+    ret.reserve(bytes_to_copy);
+
+    for (auto chunk_it = mic_buffer_begin; chunk_it != last_chunk_it; ++chunk_it) {
+        auto header = MicChunkHeaderSerialized_t{};
+        header.original_bytes = chunk_it->original_bytes;
+        header.compressed_bytes = static_cast<uint32_t>(chunk_it->compressed_data.size());
+        ret.insert(ret.end(), reinterpret_cast<const char *>(&header), reinterpret_cast<const char *>(&header) + sizeof(header)); // header
+        ret.insert(ret.end(), chunk_it->compressed_data.begin(), chunk_it->compressed_data.end()); // compressed data
+    }
+
+    mic_buffer.erase(mic_buffer_begin, last_chunk_it);
+
     return ret;
 }
 
 size_t RecordingBufferMan::SizeUnread()
 {
-    std::lock_guard lock(mtx);
+    if (mic_buffer.empty()) {
+        return {};
+    }
 
-    return mic_buffer.size();
+    return std::accumulate(mic_buffer.begin(), mic_buffer.end(), static_cast<size_t>(0), [](size_t acc, const MicChunk_t &item){
+        return acc + sizeof(MicChunkHeaderSerialized_t) + item.compressed_data.size();
+    });
 }
 
 
@@ -448,15 +456,19 @@ std::vector<char> AudioManImpl::DecodeRecordingChunks(const char *chunks, size_t
     }
 
     std::vector<char> data{};
+    data.reserve(count * 2);
+
     const auto chunks_end = chunks + count;
     while (chunks < chunks_end) {
-        auto chunk = reinterpret_cast<const MicChunkHeader_t *>(chunks);
-        if (chunk->original_bytes > 0 && chunk->compressed_bytes > 0) {
-            auto compressed_chunk = chunks + sizeof(MicChunkHeader_t);
+        auto chunk = reinterpret_cast<const MicChunkHeaderSerialized_t *>(chunks);
+        auto compressed_chunk = chunks + sizeof(MicChunkHeaderSerialized_t);
+        if (chunk->original_bytes != chunk->compressed_bytes) {
             auto deco = decompress_gzip(compressed_chunk, chunk->compressed_bytes, chunk->original_bytes);
             data.insert(data.end(), deco.begin(), deco.end());
+        } else { // previous compression failed
+            data.insert(data.end(), compressed_chunk, compressed_chunk + chunk->compressed_bytes);
         }
-        chunks += sizeof(MicChunkHeader_t) + chunk->compressed_bytes;
+        chunks += sizeof(MicChunkHeaderSerialized_t) + chunk->compressed_bytes;
     }
 
     return data;

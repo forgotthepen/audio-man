@@ -29,8 +29,9 @@ For more information, please refer to <https://unlicense.org>
 
 #include <optional>
 #include <vector>
+#include <list>
 #include <future>
-#include <mutex>
+#include <atomic>
 #include <list>
 #include <cstring> // size_t
 #include <cstdint> // uintxx_t
@@ -98,18 +99,24 @@ public:
 };
 
 
-struct MicChunkHeader_t
+struct MicChunk_t
+{
+    uint32_t original_bytes{};
+    std::vector<char> compressed_data{};
+};
+
+struct MicChunkHeaderSerialized_t
 {
     uint32_t original_bytes{};
     uint32_t compressed_bytes{};
     // compressed data array is appended here
 };
 
+
 class RecordingBufferMan
 {
 private:
-    std::vector<char> mic_buffer{};
-    std::recursive_mutex mtx{};
+    std::list<MicChunk_t> mic_buffer{};
     
 public:
     void PushData(const char *data, uint32_t bytes);
