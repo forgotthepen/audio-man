@@ -411,14 +411,16 @@ bool AudioManImpl::StartRecording(unsigned int sample_rate, unsigned char channe
         return false;
     }
 
+    recording_device.sample_rate = sample_rate;
+    recording_device.channels = channels;
+    recording_device.format = format;
+    recording_device.sound_threshold = sound_threshold;
+
     if (ma_device_start(&recording_device.device) != MA_SUCCESS) {
         ma_device_uninit(&recording_device.device);
         return false;
     }
 
-    recording_device.format = format;
-    recording_device.sample_rate = sample_rate;
-    recording_device.channels = channels;
     is_recording_active = true;
     return true;
 }
