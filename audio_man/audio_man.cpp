@@ -107,9 +107,9 @@ void AudioMan::CancelAllPlayback() const
 
 
 
-bool AudioMan::StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format) const
+bool AudioMan::StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format, unsigned char sound_threshold) const
 {
-    return impl->StartRecording(sample_rate, channels, format);
+    return impl->StartRecording(sample_rate, channels, format, sound_threshold);
 }
 
 void AudioMan::StopRecording() const
@@ -135,6 +135,11 @@ unsigned char AudioMan::GetRecordingChannelsCount() const
 RecordingFormat_t AudioMan::GetRecordingRecordingFormat() const
 {
     return impl->GetRecordingRecordingFormat();
+}
+
+unsigned char AudioMan::GetRecordingSoundThreshold() const
+{
+    return impl->GetRecordingSoundThreshold();
 }
 
 void AudioMan::ClearRecording() const

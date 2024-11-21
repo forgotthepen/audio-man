@@ -32,9 +32,6 @@ For more information, please refer to <https://unlicense.org>
 
 
 class AudioRequestImpl;
-class AudioManImpl;
-
-
 class AudioRequest {
 private:
     AudioRequestImpl *impl{};
@@ -61,6 +58,7 @@ enum class RecordingFormat_t : uint32_t {
 };
 
 
+class AudioManImpl;
 class AudioMan
 {
 private:
@@ -76,12 +74,13 @@ public:
     AudioRequest SubmitAudio(const char *audio_data, size_t count) const;
     void CancelAllPlayback() const;
     
-    bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format) const;
+    bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format, unsigned char sound_threshold = 2) const;
     void StopRecording() const;
     bool IsRecording() const;
     unsigned int GetRecordingSampleRate() const;
     unsigned char GetRecordingChannelsCount() const;
     RecordingFormat_t GetRecordingRecordingFormat() const;
+    unsigned char GetRecordingSoundThreshold() const;
     void ClearRecording() const;
     size_t SizeUnreadRecording() const;
     std::vector<char> GetUnreadRecording(size_t max_bytes = static_cast<size_t>(-1)) const;
