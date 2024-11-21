@@ -72,7 +72,7 @@ int main(int argc, char** argv)
     return 1;
   }
 
-
+ std::chrono::high_resolution_clock::time_point tttt[5]{};
   {
     if (amn.StartRecording(48000, 2, RecordingFormat_t::Signed16)) {
       std::cout << "started mic loopback!" << std::endl;
@@ -81,21 +81,31 @@ int main(int argc, char** argv)
       while (amn.IsRecording()) {
         auto chunks_size = amn.SizeUnreadRecording();
         if (!chunks_size) {
-          std::this_thread::sleep_for(std::chrono::milliseconds(200));
+          // std::cout << "silence! (empty sz)" << std::endl;
           continue;
         }
+auto t1 = std::chrono::high_resolution_clock::now();
         auto chunks = amn.GetUnreadRecording();
         if (!chunks.empty()) {
           auto deco = amn.DecodeRecordingChunks(chunks);
-
           auto wav = pcm_to_wav(deco, 48000, 2, 16);
-
           amn.SubmitAudio(wav);
+auto t2 = std::chrono::high_resolution_clock::now();
+          std::cout << "## data ##" << std::endl;
+auto dd = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+std::cout << dd << " ";
+          // std::this_thread::sleep_for(std::chrono::milliseconds(2));
+std::cout << std::endl;
+
+
+          // std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        } else {
+          std::cout << "silence! (no buffer)" << std::endl;
         }
         
         auto tt2 = std::chrono::high_resolution_clock::now();
         auto ddd = std::chrono::duration_cast<std::chrono::seconds>(tt2 - tt1).count();
-        if (ddd > 25) {
+        if (ddd > 555) {
           break;
         }
       }
