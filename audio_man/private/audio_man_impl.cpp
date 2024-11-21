@@ -29,12 +29,14 @@ For more information, please refer to <https://unlicense.org>
 #include <utility>
 #include <memory>
 #include <numeric>
+#include <unordered_map>
 
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio/miniaudio.h"
 #include "miniz/miniz.h"
 
 #include "audio_man_impl.hpp"
+#include "silence_filter.hpp"
 
 
 
@@ -248,7 +250,7 @@ std::vector<char> RecordingBufferMan::GetUnreadChunks(size_t max_bytes)
     return ret;
 }
 
-size_t RecordingBufferMan::SizeUnread()
+size_t RecordingBufferMan::SizeUnread() const
 {
     if (mic_buffer.empty()) {
         return {};
@@ -353,12 +355,24 @@ void AudioManImpl::CancelAllPlayback()
 
 
 
-bool AudioManImpl::StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format)
+static std::unordered_map<RecordingFormat_t, std::unique_ptr<IMicSilenceFilter>> silence_filters = [] {
+    std::unordered_map<RecordingFormat_t, std::unique_ptr<IMicSilenceFilter>> filters{};
+
+    filters.try_emplace( RecordingFormat_t::Float32,   std::move( std::make_unique<MicSilenceFilterPcmF32>() ) );
+    filters.try_emplace( RecordingFormat_t::Signed16,  std::move( std::make_unique<MicSilenceFilterPcmS16>() ) );
+    filters.try_emplace( RecordingFormat_t::Signed24,  std::move( std::make_unique<MicSilenceFilterPcmS24>() ) );
+    filters.try_emplace( RecordingFormat_t::Signed32,  std::move( std::make_unique<MicSilenceFilterPcmS32>() ) );
+    filters.try_emplace( RecordingFormat_t::Unsigned8, std::move( std::make_unique<MicSilenceFilterPcmU8>()  ) );
+
+    return filters;
+}();
+
+bool AudioManImpl::StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format, unsigned char sound_threshold)
 {
     if (is_recording_active) {
         return true;
     }
-    
+
     recording_device.cfg = ma_device_config_init(ma_device_type_capture);
     
     switch (format) {
@@ -373,17 +387,24 @@ bool AudioManImpl::StartRecording(unsigned int sample_rate, unsigned char channe
 
     recording_device.cfg.capture.channels = channels;
     recording_device.cfg.sampleRate = sample_rate;
-    recording_device.cfg.pUserData = &recording_buffer_man;
+    recording_device.cfg.pUserData = this;
     recording_device.cfg.dataCallback = [](ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount){
         if (!pInput) {
             return; // no input data
         }
 
-        auto recording_buffer_man = static_cast<RecordingBufferMan *>(pDevice->pUserData);
-
         auto input_data = static_cast<const char*>(pInput);
         auto frame_bytes = ma_get_bytes_per_frame(pDevice->capture.format, pDevice->capture.channels) * frameCount;
-        recording_buffer_man->PushData(input_data, frame_bytes);
+        
+        auto self_ref = static_cast<AudioManImpl *>(pDevice->pUserData);
+        auto filter_it = silence_filters.find(self_ref->GetRecordingRecordingFormat());
+        if (silence_filters.end() != filter_it) {
+            if (filter_it->second->IsSilencePcmData(input_data, frame_bytes, self_ref->GetRecordingSoundThreshold())) {
+                return;
+            }
+        }
+
+        self_ref->GetRecordingBufferMan()->PushData(input_data, frame_bytes);
     };
 
     if (ma_device_init(nullptr, &recording_device.cfg, &recording_device.device) != MA_SUCCESS) {
@@ -433,6 +454,10 @@ RecordingFormat_t AudioManImpl::GetRecordingRecordingFormat() const
     return recording_device.format;
 }
 
+unsigned char AudioManImpl::GetRecordingSoundThreshold() const
+{
+    return recording_device.sound_threshold;
+}
 
 void AudioManImpl::ClearRecording()
 {
@@ -456,7 +481,7 @@ std::vector<char> AudioManImpl::DecodeRecordingChunks(const char *chunks, size_t
     }
 
     std::vector<char> data{};
-    data.reserve(count * 2);
+    data.reserve(count + count / 2);
 
     const auto chunks_end = chunks + count;
     while (chunks < chunks_end) {
@@ -472,4 +497,9 @@ std::vector<char> AudioManImpl::DecodeRecordingChunks(const char *chunks, size_t
     }
 
     return data;
+}
+
+RecordingBufferMan* AudioManImpl::GetRecordingBufferMan()
+{
+    return &recording_buffer_man;
 }

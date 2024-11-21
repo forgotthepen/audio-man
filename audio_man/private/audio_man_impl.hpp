@@ -122,7 +122,7 @@ public:
     void PushData(const char *data, uint32_t bytes);
     void Clear();
     std::vector<char> GetUnreadChunks(size_t max_bytes);
-    size_t SizeUnread();
+    size_t SizeUnread() const;
 };
 
 
@@ -132,9 +132,10 @@ private:
     struct RecordingDevice_t {
         ma_device_config cfg{};
         ma_device device{};
-        RecordingFormat_t format{};
         unsigned int sample_rate{};
         unsigned char channels{};
+        RecordingFormat_t format{};
+        unsigned char sound_threshold{};
     };
 
     PlaybackRequestsMan playback_requests{};
@@ -153,15 +154,17 @@ public:
     AudioRequestImpl* SubmitAudio(const char *audio_data, size_t count);
     void CancelAllPlayback();
 
-    bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format);
+    bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format, unsigned char sound_threshold);
     void StopRecording();
     bool IsRecording() const;
     unsigned int GetRecordingSampleRate() const;
     unsigned char GetRecordingChannelsCount() const;
     RecordingFormat_t GetRecordingRecordingFormat() const;
+    unsigned char GetRecordingSoundThreshold() const;
     void ClearRecording();
     size_t SizeUnreadRecording();
     std::vector<char> GetUnreadRecording(size_t max_bytes);
     std::vector<char> DecodeRecordingChunks(const char *chunks, size_t count);
+    RecordingBufferMan* GetRecordingBufferMan();
 
 };
