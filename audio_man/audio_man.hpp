@@ -74,7 +74,7 @@ public:
     AudioRequest SubmitAudio(const char *audio_data, size_t count) const;
     void CancelAllPlayback() const;
     
-    bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format, unsigned char sound_threshold = 2) const;
+    bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format, unsigned char sound_threshold = 1) const;
     void StopRecording() const;
     bool IsRecording() const;
     unsigned int GetRecordingSampleRate() const;
