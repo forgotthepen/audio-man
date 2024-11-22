@@ -59,7 +59,7 @@ bool MicSilenceFilterPcmS16::IsSilencePcmData(const char *data, size_t count, fl
         return true;
     }
 
-    // PCM signed16 stores values in range [−32768, 32767]
+    // PCM signed16 stores values in range [-32768, 32767]
     const auto threshold = static_cast<int16_t>(32767L * sound_threshold);
 
     auto samples = reinterpret_cast<const int16_t *>(data);
@@ -85,7 +85,7 @@ bool MicSilenceFilterPcmS24::IsSilencePcmData(const char *data, size_t count, fl
         return false; // invalid data size
     }
 
-    // PCM signed24 stores values in range [−8,388,608, 8,388,607]
+    // PCM signed24 stores values in range [-8,388,608, 8,388,607]
     const int32_t threshold = static_cast<int32_t>(8388607L) * sound_threshold;
 
     const auto data_end = data + count;
@@ -115,7 +115,7 @@ bool MicSilenceFilterPcmS32::IsSilencePcmData(const char *data, size_t count, fl
         return true;
     }
 
-    // PCM signed32 stores values in range [−2,147,483,648, 2,147,483,647]
+    // PCM signed32 stores values in range [-2,147,483,648, 2,147,483,647]
     const auto threshold = static_cast<int32_t>(2147483647LL * sound_threshold);
 
     auto samples = reinterpret_cast<const int32_t *>(data);
@@ -136,7 +136,7 @@ bool MicSilenceFilterPcmU8::IsSilencePcmData(const char *data, size_t count, flo
         return true;
     }
 
-    // PCM signed8 stores values in range [−128, 127]
+    // PCM signed8 stores values in range [-128, 127]
     // PCM unsigned8 stores values in range [0, 255] (silence midpoint = 128)
     const auto threshold = static_cast<int8_t>(127L * sound_threshold);
     constexpr int8_t midpoint = 128;

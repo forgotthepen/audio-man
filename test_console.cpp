@@ -75,7 +75,8 @@ int main(int argc, char** argv)
   
   {
     if (amn.StartRecording(48000, 2, RecordingFormat_t::Signed16)) {
-      amn.SetRecordingSoundThresholdPercent(1.5);
+      amn.SetRecordingSoundGainPercent(655.0f);
+      amn.SetRecordingSoundThresholdPercent(10.5);
       std::cout << "started mic loopback!" << std::endl;
 
       auto tt1 = std::chrono::high_resolution_clock::now();
