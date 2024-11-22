@@ -181,6 +181,16 @@ float AudioMan::GetRecordingSoundThresholdPercent() const
     return impl_recording->GetRecordingSoundThresholdPercent();
 }
 
+void AudioMan::SetRecordingSoundGainPercent(float sound_gain_percent) const // [0.0, >= 100.0]
+{
+    impl_recording->SetRecordingSoundGainPercent(sound_gain_percent);
+}
+
+float AudioMan::GetRecordingSoundGainPercent() const
+{
+    return impl_recording->GetRecordingSoundGainPercent();
+}
+
 void AudioMan::ClearRecording() const
 {
     impl_recording->ClearRecording();

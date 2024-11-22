@@ -69,6 +69,7 @@ struct RecordingDevice_t {
     unsigned int sample_rate{};
     unsigned char channels{};
     RecordingFormat_t format{};
+    float sound_gain = 1.0f;
     float sound_threshold = 0; // allow anything
 };
 
@@ -93,6 +94,10 @@ public:
     void SetRecordingSoundThresholdPercent(float sound_threshold_percent); // [0.0, 100.0]
     float GetRecordingSoundThresholdPercent() const;
     float GetRecordingSoundThresholdPercentUnscaled() const;
+
+    void SetRecordingSoundGainPercent(float sound_gain_percent); // [0.0, >= 100.0]
+    float GetRecordingSoundGainPercent() const;
+    float GetRecordingSoundGainPercentUnscaled() const;
 
     void ClearRecording();
     size_t SizeUnreadRecording();

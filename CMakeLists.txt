@@ -24,6 +24,8 @@ add_executable(
     audio_man/private/playback/playback.cpp
     audio_man/private/playback/playback.hpp
 
+    audio_man/private/recording/mic_gain/mic_gain.cpp
+    audio_man/private/recording/mic_gain/mic_gain.hpp
     audio_man/private/recording/silence_filter/silence_filter.cpp
     audio_man/private/recording/silence_filter/silence_filter.hpp
     audio_man/private/recording/recording.cpp

@@ -102,6 +102,9 @@ public:
     void SetRecordingSoundThresholdPercent(float sound_threshold_percent) const; // [0.0, 100.0]
     float GetRecordingSoundThresholdPercent() const;
 
+    void SetRecordingSoundGainPercent(float sound_gain_percent) const; // [0.0, >= 100.0]
+    float GetRecordingSoundGainPercent() const;
+
     void ClearRecording() const;
     size_t SizeUnreadRecording() const;
     std::vector<char> GetUnreadRecording(size_t max_bytes = static_cast<size_t>(-1)) const;

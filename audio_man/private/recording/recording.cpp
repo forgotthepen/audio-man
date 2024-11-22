@@ -33,6 +33,7 @@ For more information, please refer to <https://unlicense.org>
 #include "miniz/miniz.h"
 
 #include "silence_filter/silence_filter.hpp"
+#include "mic_gain/mic_gain.hpp"
 #include "recording.hpp"
 
 
@@ -44,6 +45,18 @@ static const std::unordered_map<RecordingFormat_t, std::unique_ptr<IMicSilenceFi
     filters.try_emplace( RecordingFormat_t::Signed24,  std::move( std::make_unique<MicSilenceFilterPcmS24>() ) );
     filters.try_emplace( RecordingFormat_t::Signed32,  std::move( std::make_unique<MicSilenceFilterPcmS32>() ) );
     filters.try_emplace( RecordingFormat_t::Unsigned8, std::move( std::make_unique<MicSilenceFilterPcmU8>()  ) );
+
+    return filters;
+}();
+
+static const std::unordered_map<RecordingFormat_t, std::unique_ptr<IMicGain>> gain_filters = [] {
+    std::unordered_map<RecordingFormat_t, std::unique_ptr<IMicGain>> filters{};
+
+    filters.try_emplace( RecordingFormat_t::Float32,   std::move( std::make_unique<MicGainPcmF32>() ) );
+    filters.try_emplace( RecordingFormat_t::Signed16,  std::move( std::make_unique<MicGainPcmS16>() ) );
+    filters.try_emplace( RecordingFormat_t::Signed24,  std::move( std::make_unique<MicGainPcmS24>() ) );
+    filters.try_emplace( RecordingFormat_t::Signed32,  std::move( std::make_unique<MicGainPcmS32>() ) );
+    filters.try_emplace( RecordingFormat_t::Unsigned8, std::move( std::make_unique<MicGainPcmU8>()  ) );
 
     return filters;
 }();
@@ -204,14 +217,23 @@ bool AudioRecording::StartRecording(unsigned int sample_rate, unsigned char chan
         auto frame_bytes = ma_get_bytes_per_frame(pDevice->capture.format, pDevice->capture.channels) * frameCount;
         
         auto self_ref = static_cast<AudioRecording *>(pDevice->pUserData);
+
+        std::vector<char> pcm_data{};
+        auto gain_it = gain_filters.find(self_ref->GetRecordingRecordingFormat());
+        if (gain_filters.end() != gain_it) {
+            pcm_data = gain_it->second->ApplyGain(input_data, frame_bytes, self_ref->GetRecordingSoundGainPercentUnscaled());
+        } else {
+            pcm_data = std::vector<char>(input_data, input_data + frame_bytes);
+        }
+        
         auto filter_it = silence_filters.find(self_ref->GetRecordingRecordingFormat());
         if (silence_filters.end() != filter_it) {
-            if (filter_it->second->IsSilencePcmData(input_data, frame_bytes, self_ref->GetRecordingSoundThresholdPercentUnscaled())) {
+            if (filter_it->second->IsSilencePcmData(pcm_data.data(), pcm_data.size(), self_ref->GetRecordingSoundThresholdPercentUnscaled())) {
                 return;
             }
         }
 
-        self_ref->GetRecordingBufferMan()->PushData(input_data, frame_bytes);
+        self_ref->GetRecordingBufferMan()->PushData(pcm_data.data(), static_cast<uint32_t>(pcm_data.size()));
     };
 
     if (ma_device_init(nullptr, &recording_device.cfg, &recording_device.device) != MA_SUCCESS) {
@@ -280,6 +302,24 @@ float AudioRecording::GetRecordingSoundThresholdPercent() const
 float AudioRecording::GetRecordingSoundThresholdPercentUnscaled() const
 {
     return recording_device.sound_threshold;
+}
+
+void AudioRecording::SetRecordingSoundGainPercent(float sound_gain_percent) // [0.0, >= 100.0]
+{
+    if (sound_gain_percent < 0) {
+        sound_gain_percent = 0;
+    }
+    recording_device.sound_gain = sound_gain_percent / 100; // [0.0, >= 1.0]
+}
+
+float AudioRecording::GetRecordingSoundGainPercent() const
+{
+    return recording_device.sound_gain * 100;
+}
+
+float AudioRecording::GetRecordingSoundGainPercentUnscaled() const
+{
+    return recording_device.sound_gain;
 }
 
 void AudioRecording::ClearRecording()
