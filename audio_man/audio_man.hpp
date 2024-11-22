@@ -68,7 +68,12 @@ private:
 
 public:
     AudioMan();
+    AudioMan(AudioMan &&other);
+    AudioMan(const AudioMan &other) = delete;
     ~AudioMan();
+
+    AudioMan& operator=(AudioMan &&other);
+    AudioMan& operator=(const AudioMan &other) = delete;
 
     // *** playback *** //
     bool InitPlayback() const;

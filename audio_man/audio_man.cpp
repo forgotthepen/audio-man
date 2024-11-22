@@ -26,6 +26,7 @@ For more information, please refer to <https://unlicense.org>
 */
 
 #include <chrono>
+#include <utility> // swap
 
 #include "audio_man.hpp"
 #include "private/playback/playback.hpp"
@@ -36,6 +37,12 @@ AudioMan::AudioMan()
 {
     impl_playback = new AudioPlayback{};
     impl_recording = new AudioRecording{};
+}
+
+AudioMan::AudioMan(AudioMan &&other)
+{
+    std::swap(impl_playback, other.impl_playback);
+    std::swap(impl_recording, other.impl_recording);
 }
 
 AudioMan::~AudioMan()
@@ -50,6 +57,17 @@ AudioMan::~AudioMan()
         impl_recording = nullptr;
     }
 }
+
+
+AudioMan& AudioMan::operator=(AudioMan &&other)
+{
+    if (&other != this) {
+        std::destroy_at(this);
+        std::construct_at(this, std::move(other));
+    }
+    return *this;
+}
+
 
 AudioRequest::AudioRequest(AudioRequestImpl *ptr)
 {
