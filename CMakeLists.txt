@@ -20,9 +20,14 @@ add_executable(
     audio_man/audio_man.hpp
 
     audio_man/private/audio_man_impl.cpp
-    audio_man/private/audio_man_impl.hpp
-    audio_man/private/silence_filter.cpp
-    audio_man/private/silence_filter.hpp
+    
+    audio_man/private/playback/playback.cpp
+    audio_man/private/playback/playback.hpp
+
+    audio_man/private/recording/silence_filter/silence_filter.cpp
+    audio_man/private/recording/silence_filter/silence_filter.hpp
+    audio_man/private/recording/recording.cpp
+    audio_man/private/recording/recording.hpp
 
     libs/miniaudio/miniaudio.h
     libs/miniz/miniz.h

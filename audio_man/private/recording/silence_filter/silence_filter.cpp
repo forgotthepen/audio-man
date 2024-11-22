@@ -33,24 +33,19 @@ For more information, please refer to <https://unlicense.org>
 // https://en.wikipedia.org/wiki/Audio_bit_depth
 
 
-bool MicSilenceFilterPcmF32::IsSilencePcmData(const char *data, size_t count, unsigned char sound_threshold)
+bool MicSilenceFilterPcmF32::IsSilencePcmData(const char *data, size_t count, float sound_threshold)
 {
     if (!data || !count) {
         return true;
     }
 
-    if (sound_threshold > 100) {
-        sound_threshold = 100;
-    }
-
     // PCM float32 stores values in range [-1.0, 1.0]
-    const auto threshold = sound_threshold / 100.0f;
 
     auto samples = reinterpret_cast<const float *>(data);
     const auto samples_end = samples + (count / sizeof(float)); // each 4 bytes represent a sample
 
     for (; samples < samples_end; ++samples) {
-        if (std::fabs(*samples) >= threshold) {
+        if (std::fabs(*samples) >= sound_threshold) {
             return false;
         }
     }
@@ -58,18 +53,14 @@ bool MicSilenceFilterPcmF32::IsSilencePcmData(const char *data, size_t count, un
     return true;
 }
 
-bool MicSilenceFilterPcmS16::IsSilencePcmData(const char *data, size_t count, unsigned char sound_threshold)
+bool MicSilenceFilterPcmS16::IsSilencePcmData(const char *data, size_t count, float sound_threshold)
 {
     if (!data || !count) {
         return true;
     }
 
-    if (sound_threshold > 100) {
-        sound_threshold = 100;
-    }
-
     // PCM signed16 stores values in range [−32768, 32767]
-    const auto threshold = static_cast<int16_t>(32767L * sound_threshold / 100);
+    const auto threshold = static_cast<int16_t>(32767L * sound_threshold);
 
     auto samples = reinterpret_cast<const int16_t *>(data);
     const auto samples_end = samples + (count / sizeof(int16_t));
@@ -83,7 +74,7 @@ bool MicSilenceFilterPcmS16::IsSilencePcmData(const char *data, size_t count, un
     return true;
 }
 
-bool MicSilenceFilterPcmS24::IsSilencePcmData(const char *data, size_t count, unsigned char sound_threshold)
+bool MicSilenceFilterPcmS24::IsSilencePcmData(const char *data, size_t count, float sound_threshold)
 {
     if (!data || !count) {
         return true;
@@ -94,12 +85,8 @@ bool MicSilenceFilterPcmS24::IsSilencePcmData(const char *data, size_t count, un
         return false; // invalid data size
     }
 
-    if (sound_threshold > 100) {
-        sound_threshold = 100;
-    }
-
     // PCM signed24 stores values in range [−8,388,608, 8,388,607]
-    const int32_t threshold = static_cast<int32_t>(8388607L) * sound_threshold / 100;
+    const int32_t threshold = static_cast<int32_t>(8388607L) * sound_threshold;
 
     const auto data_end = data + count;
 
@@ -122,18 +109,14 @@ bool MicSilenceFilterPcmS24::IsSilencePcmData(const char *data, size_t count, un
     return true;
 }
 
-bool MicSilenceFilterPcmS32::IsSilencePcmData(const char *data, size_t count, unsigned char sound_threshold)
+bool MicSilenceFilterPcmS32::IsSilencePcmData(const char *data, size_t count, float sound_threshold)
 {
     if (!data || !count) {
         return true;
     }
 
-    if (sound_threshold > 100) {
-        sound_threshold = 100;
-    }
-
     // PCM signed32 stores values in range [−2,147,483,648, 2,147,483,647]
-    const auto threshold = static_cast<int32_t>(2147483647LL * sound_threshold / 100);
+    const auto threshold = static_cast<int32_t>(2147483647LL * sound_threshold);
 
     auto samples = reinterpret_cast<const int32_t *>(data);
     const auto samples_end = samples + (count / sizeof(int32_t));
@@ -147,19 +130,15 @@ bool MicSilenceFilterPcmS32::IsSilencePcmData(const char *data, size_t count, un
     return true;
 }
 
-bool MicSilenceFilterPcmU8::IsSilencePcmData(const char *data, size_t count, unsigned char sound_threshold)
+bool MicSilenceFilterPcmU8::IsSilencePcmData(const char *data, size_t count, float sound_threshold)
 {
     if (!data || !count) {
         return true;
     }
 
-    if (sound_threshold > 100) {
-        sound_threshold = 100;
-    }
-
     // PCM signed8 stores values in range [−128, 127]
     // PCM unsigned8 stores values in range [0, 255] (silence midpoint = 128)
-    const auto threshold = static_cast<int8_t>(127L * sound_threshold / 100);
+    const auto threshold = static_cast<int8_t>(127L * sound_threshold);
     constexpr int8_t midpoint = 128;
 
     auto samples = reinterpret_cast<const uint8_t *>(data);

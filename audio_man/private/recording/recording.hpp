@@ -27,76 +27,14 @@ For more information, please refer to <https://unlicense.org>
 
 #pragma once
 
-#include <optional>
 #include <vector>
 #include <list>
-#include <future>
-#include <atomic>
-#include <list>
+#include <memory>
 #include <cstring> // size_t
 #include <cstdint> // uintxx_t
 
-#include "../audio_man.hpp"
+#include "../../audio_man.hpp"
 #include "miniaudio/miniaudio.h"
-
-
-class AudioManImpl;
-class PlaybackRequestsMan;
-
-class AudioRequestImpl {
-private:
-    friend class AudioManImpl;
-    friend class PlaybackRequestsMan;
-    
-     // used when reading files
-    std::optional<ma_decoder> decoder{};
-    std::optional<ma_sound_config> cfg{};
-    // ----
-    
-    std::optional<ma_sound> sound{};
-
-    std::vector<char> data{};
-
-    std::promise<bool> promise{};
-    std::shared_future<bool> future_result{};
-
-    std::list<AudioRequestImpl>::iterator my_itr{};
-    PlaybackRequestsMan *requests_man{};
-
-    bool done = false;
-    
-    std::recursive_mutex req_mtx{};
-    
-    void remove_from_requests_manager();
-
-public:
-    AudioRequestImpl() noexcept;
-    AudioRequestImpl(AudioRequestImpl &&other) noexcept;
-    ~AudioRequestImpl() = default;
-
-    AudioRequestImpl& operator=(AudioRequestImpl &&other) noexcept;
-    
-    AudioRequestImpl(const AudioRequestImpl &other) = delete;
-    AudioRequestImpl& operator=(const AudioRequestImpl &other) = delete;
-
-    std::shared_future<bool> FutureResult() const;
-    void Cancel(bool success);
-};
-
-
-class PlaybackRequestsMan
-{
-private:
-    std::list<AudioRequestImpl> requests{};
-    std::recursive_mutex mtx{};
-
-public:
-    ~PlaybackRequestsMan();
-
-    std::list<AudioRequestImpl>::iterator CreateNew();
-    void Remove(std::list<AudioRequestImpl>::iterator itr);
-    void CancelAndRemoveAll();
-};
 
 
 struct MicChunk_t
@@ -125,46 +63,42 @@ public:
     size_t SizeUnread() const;
 };
 
+struct RecordingDevice_t {
+    ma_device_config cfg{};
+    ma_device device{};
+    unsigned int sample_rate{};
+    unsigned char channels{};
+    RecordingFormat_t format{};
+    float sound_threshold = 0; // allow anything
+};
 
-class AudioManImpl
+class AudioRecording
 {
 private:
-    struct RecordingDevice_t {
-        ma_device_config cfg{};
-        ma_device device{};
-        unsigned int sample_rate{};
-        unsigned char channels{};
-        RecordingFormat_t format{};
-        unsigned char sound_threshold{};
-    };
-
-    PlaybackRequestsMan playback_requests{};
-    ma_engine playback_engine{};
-    bool is_playback_inited = false;
-
     RecordingBufferMan recording_buffer_man{};
     RecordingDevice_t recording_device{}; 
     bool is_recording_active = false;   
 
 public:
-    ~AudioManImpl();
+    ~AudioRecording();
 
-    bool InitPlayback();
-    void UninitPlayback();
-    AudioRequestImpl* SubmitAudio(const char *audio_data, size_t count);
-    void CancelAllPlayback();
-
-    bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format, unsigned char sound_threshold);
+    bool StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format);
     void StopRecording();
     bool IsRecording() const;
+
     unsigned int GetRecordingSampleRate() const;
     unsigned char GetRecordingChannelsCount() const;
     RecordingFormat_t GetRecordingRecordingFormat() const;
-    unsigned char GetRecordingSoundThreshold() const;
+
+    void SetRecordingSoundThresholdPercent(float sound_threshold_percent); // [0.0, 100.0]
+    float GetRecordingSoundThresholdPercent() const;
+    float GetRecordingSoundThresholdPercentUnscaled() const;
+
     void ClearRecording();
     size_t SizeUnreadRecording();
     std::vector<char> GetUnreadRecording(size_t max_bytes);
     std::vector<char> DecodeRecordingChunks(const char *chunks, size_t count);
+
     RecordingBufferMan* GetRecordingBufferMan();
 
 };

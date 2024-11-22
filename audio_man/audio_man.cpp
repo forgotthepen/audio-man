@@ -28,9 +28,28 @@ For more information, please refer to <https://unlicense.org>
 #include <chrono>
 
 #include "audio_man.hpp"
-#include "private/audio_man_impl.hpp"
+#include "private/playback/playback.hpp"
+#include "private/recording/recording.hpp"
 
 
+AudioMan::AudioMan()
+{
+    impl_playback = new AudioPlayback{};
+    impl_recording = new AudioRecording{};
+}
+
+AudioMan::~AudioMan()
+{
+    if (impl_playback) {
+        delete impl_playback;
+        impl_playback = nullptr;
+    }
+    
+    if (impl_recording) {
+        delete impl_recording;
+        impl_recording = nullptr;
+    }
+}
 
 AudioRequest::AudioRequest(AudioRequestImpl *ptr)
 {
@@ -67,102 +86,104 @@ void AudioRequest::Cancel() const
 
 
 
-AudioMan::AudioMan()
-{
-    impl = new AudioManImpl{};
-}
-
-AudioMan::~AudioMan()
-{
-    if (impl) {
-        delete impl;
-        impl = nullptr;
-    }
-}
-
 bool AudioMan::InitPlayback() const
 {
-    return impl->InitPlayback();
+    return impl_playback->InitPlayback();
 }
 
 void AudioMan::UninitPlayback() const
 {
-    impl->UninitPlayback();
+    impl_playback->UninitPlayback();
 }
 
 AudioRequest AudioMan::SubmitAudio(const std::vector<char> &audio_data) const
 {
-    return impl->SubmitAudio(audio_data.data(), audio_data.size());
+    return impl_playback->SubmitAudio(audio_data.data(), audio_data.size());
 }
 
 AudioRequest AudioMan::SubmitAudio(const char *audio_data, size_t count) const
 {
-    return impl->SubmitAudio(audio_data, count);
+    return impl_playback->SubmitAudio(audio_data, count);
+}
+
+void AudioMan::SetPlaybackVolumePercent(float sound_volume_percent) const
+{
+    impl_playback->SetPlaybackVolumePercent(sound_volume_percent);
+}
+
+float AudioMan::GetPlaybackVolumePercent() const
+{
+    return impl_playback->GetPlaybackVolumePercent();
 }
 
 void AudioMan::CancelAllPlayback() const
 {
-    impl->CancelAllPlayback();
+    impl_playback->CancelAllPlayback();
 }
 
 
 
-bool AudioMan::StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format, unsigned char sound_threshold) const
+bool AudioMan::StartRecording(unsigned int sample_rate, unsigned char channels, RecordingFormat_t format) const
 {
-    return impl->StartRecording(sample_rate, channels, format, sound_threshold);
+    return impl_recording->StartRecording(sample_rate, channels, format);
 }
 
 void AudioMan::StopRecording() const
 {
-    impl->StopRecording();
+    impl_recording->StopRecording();
 }
 
 bool AudioMan::IsRecording() const
 {
-    return impl->IsRecording();
+    return impl_recording->IsRecording();
 }
 
 unsigned int AudioMan::GetRecordingSampleRate() const
 {
-    return impl->GetRecordingSampleRate();
+    return impl_recording->GetRecordingSampleRate();
 }
 
 unsigned char AudioMan::GetRecordingChannelsCount() const
 {
-    return impl->GetRecordingChannelsCount();
+    return impl_recording->GetRecordingChannelsCount();
 }
 
 RecordingFormat_t AudioMan::GetRecordingRecordingFormat() const
 {
-    return impl->GetRecordingRecordingFormat();
+    return impl_recording->GetRecordingRecordingFormat();
 }
 
-unsigned char AudioMan::GetRecordingSoundThreshold() const
+void AudioMan::SetRecordingSoundThresholdPercent(float sound_threshold_percent) const
 {
-    return impl->GetRecordingSoundThreshold();
+    impl_recording->SetRecordingSoundThresholdPercent(sound_threshold_percent);
+}
+
+float AudioMan::GetRecordingSoundThresholdPercent() const
+{
+    return impl_recording->GetRecordingSoundThresholdPercent();
 }
 
 void AudioMan::ClearRecording() const
 {
-    impl->ClearRecording();
+    impl_recording->ClearRecording();
 }
 
 size_t AudioMan::SizeUnreadRecording() const
 {
-    return impl->SizeUnreadRecording();
+    return impl_recording->SizeUnreadRecording();
 }
 
 std::vector<char> AudioMan::GetUnreadRecording(size_t max_bytes) const
 {
-    return impl->GetUnreadRecording(max_bytes);
+    return impl_recording->GetUnreadRecording(max_bytes);
 }
 
 std::vector<char> AudioMan::DecodeRecordingChunks(const std::vector<char> &chunks) const
 {
-    return impl->DecodeRecordingChunks(chunks.data(), chunks.size());
+    return impl_recording->DecodeRecordingChunks(chunks.data(), chunks.size());
 }
 
 std::vector<char> AudioMan::DecodeRecordingChunks(const char *chunks, size_t count) const
 {
-    return impl->DecodeRecordingChunks(chunks, count);
+    return impl_recording->DecodeRecordingChunks(chunks, count);
 }

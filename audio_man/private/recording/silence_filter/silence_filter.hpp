@@ -25,41 +25,43 @@ OTHER DEALINGS IN THE SOFTWARE.
 For more information, please refer to <https://unlicense.org>
 */
 
+#pragma once
+
 #include <vector>
 #include <cstring> // size_t
 
 class IMicSilenceFilter
 {
 public:
-    virtual bool IsSilencePcmData(const char *data, size_t count, unsigned char sound_threshold) = 0;
+    virtual bool IsSilencePcmData(const char *data, size_t count, float sound_threshold) = 0;
 };
 
 class MicSilenceFilterPcmF32 : public IMicSilenceFilter
 {
 public:
-    bool IsSilencePcmData(const char *data, size_t count, unsigned char sound_threshold);
+    bool IsSilencePcmData(const char *data, size_t count, float sound_threshold);
 };
 
 class MicSilenceFilterPcmS16 : public IMicSilenceFilter
 {
 public:
-    bool IsSilencePcmData(const char *data, size_t count, unsigned char sound_threshold);
+    bool IsSilencePcmData(const char *data, size_t count, float sound_threshold);
 };
 
 class MicSilenceFilterPcmS24 : public IMicSilenceFilter
 {
 public:
-    bool IsSilencePcmData(const char *data, size_t count, unsigned char sound_threshold);
+    bool IsSilencePcmData(const char *data, size_t count, float sound_threshold);
 };
 
 class MicSilenceFilterPcmS32 : public IMicSilenceFilter
 {
 public:
-    bool IsSilencePcmData(const char *data, size_t count, unsigned char sound_threshold);
+    bool IsSilencePcmData(const char *data, size_t count, float sound_threshold);
 };
 
 class MicSilenceFilterPcmU8 : public IMicSilenceFilter
 {
 public:
-    bool IsSilencePcmData(const char *data, size_t count, unsigned char sound_threshold);
+    bool IsSilencePcmData(const char *data, size_t count, float sound_threshold);
 };

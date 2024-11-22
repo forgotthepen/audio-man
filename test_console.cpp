@@ -72,9 +72,10 @@ int main(int argc, char** argv)
     return 1;
   }
 
- std::chrono::high_resolution_clock::time_point tttt[5]{};
+  
   {
     if (amn.StartRecording(48000, 2, RecordingFormat_t::Signed16)) {
+      amn.SetRecordingSoundThresholdPercent(1.5);
       std::cout << "started mic loopback!" << std::endl;
 
       auto tt1 = std::chrono::high_resolution_clock::now();
