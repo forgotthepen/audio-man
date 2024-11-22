@@ -26,6 +26,12 @@ For more information, please refer to <https://unlicense.org>
 */
 
 
+// https://sourceforge.net/p/predef/wiki/OperatingSystems/
+// https://miniaud.io/docs/manual/index.html   (section: 2.2. macOS and iOS)
+#if defined(macintosh) || defined(Macintosh) || defined(__APPLE__) || defined(__MACH__)
+    #define MA_NO_RUNTIME_LINKING
+#endif
+
 // we need this .cpp file to provive the miniaudio impl
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio/miniaudio.h"
