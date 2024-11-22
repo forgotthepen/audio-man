@@ -96,7 +96,7 @@ public:
 struct PlaybackDevice_t {
     ma_engine engine{};
 
-    float volume = 100;
+    float volume = 1.0f;
 };
 
 class AudioPlayback
